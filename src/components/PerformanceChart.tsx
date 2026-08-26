@@ -92,8 +92,9 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
           >
             <defs>
               <linearGradient id="token-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#79a4ff" /><stop offset="1" stopColor="#0052ff" /></linearGradient>
-              <linearGradient id="lp-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#a8fff0" /><stop offset="1" stopColor="#35d9bd" /></linearGradient>
+              <linearGradient id="lp-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#009b88" /><stop offset="1" stopColor="#00776d" /></linearGradient>
               <filter id="line-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              <filter id="lp-line-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             </defs>
 
             {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -120,7 +121,7 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
             <text x={PADDING.left} y={17} className="chart-caption chart-caption--token">FDV</text>
             <text x={WIDTH - PADDING.right} y={17} textAnchor="end" className="chart-caption chart-caption--lp">NAV / SHARE</text>
             <path d={chart.fdvPath} className={`chart-line chart-line--token ${side === "token" ? "is-selected" : ""}`} filter={side === "token" ? "url(#line-glow)" : undefined} />
-            <path d={chart.navPath} className={`chart-line chart-line--lp ${side === "lp" ? "is-selected" : ""}`} filter={side === "lp" ? "url(#line-glow)" : undefined} />
+            <path d={chart.navPath} className={`chart-line chart-line--lp ${side === "lp" ? "is-selected" : ""}`} filter={side === "lp" ? "url(#lp-line-glow)" : undefined} />
 
             {hovered && (
               <g>

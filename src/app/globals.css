@@ -898,6 +898,10 @@ a {
   stroke: url("#lp-line");
 }
 
+.chart-line--lp.is-selected {
+  stroke-width: 3.7;
+}
+
 .chart-cursor {
   stroke: rgba(7, 22, 53, 0.32);
   stroke-dasharray: 3 4;
