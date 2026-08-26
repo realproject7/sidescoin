@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type {
   MarketRange,
   MarketSnapshot,
@@ -44,7 +45,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
       Accept: "application/json",
       ...init?.headers,
     },
-    signal: AbortSignal.timeout(9_000),
+    signal: AbortSignal.timeout(6_000),
   });
 
   if (!response.ok) {
@@ -132,7 +133,16 @@ async function getQuoteUsd(symbol: string): Promise<number> {
   throw new Error(`Unsupported quote currency: ${symbol}`);
 }
 
-export async function getMarketSnapshot(
+function requireSupply(candidate: Promise<number | null>): Promise<number> {
+  return candidate.then((value) => {
+    if (value === null || !Number.isFinite(value) || value <= 0) {
+      throw new Error("Token supply source returned no usable value");
+    }
+    return value;
+  });
+}
+
+async function loadMarketSnapshot(
   range: MarketRange,
 ): Promise<MarketSnapshot> {
   const config = getConfig();
@@ -141,18 +151,18 @@ export async function getMarketSnapshot(
   const marketUrl = `${config.baseUrl}/api/markets/${encodedChain}/${encodedAddress}`;
   const seriesUrl = `${marketUrl}/series?range=${range}`;
 
-  const [market, series] = await Promise.all([
-    fetchJson<RawMarketResponse>(marketUrl),
-    fetchJson<RawSeriesResponse>(seriesUrl),
-  ]);
-
-  const [rpcSupply, quoteUsd] = await Promise.all([
-    readTotalSupply(config.rpcUrl, market.token.address, market.token.decimals),
+  const marketPromise = fetchJson<RawMarketResponse>(marketUrl);
+  const seriesPromise = fetchJson<RawSeriesResponse>(seriesUrl);
+  const market = await marketPromise;
+  const supplyPromise = Promise.any([
+    requireSupply(readTotalSupply(config.rpcUrl, market.token.address, market.token.decimals)),
+    requireSupply(readDexImpliedSupply(market.chain.slug, market.token.address)),
+  ]).catch(() => null);
+  const [series, totalSupply, quoteUsd] = await Promise.all([
+    seriesPromise,
+    supplyPromise,
     getQuoteUsd(market.pool.quote.symbol),
   ]);
-  const totalSupply =
-    rpcSupply ??
-    (await readDexImpliedSupply(market.chain.slug, market.token.address));
 
   return normalizeMarketSnapshot({
     market,
@@ -162,4 +172,14 @@ export async function getMarketSnapshot(
     quoteUsd,
     marketBaseUrl: config.baseUrl,
   });
+}
+
+const getCachedMarketSnapshot = unstable_cache(
+  loadMarketSnapshot,
+  ["sides-market-snapshot-v2"],
+  { revalidate: 45 },
+);
+
+export async function getMarketSnapshot(range: MarketRange): Promise<MarketSnapshot> {
+  return getCachedMarketSnapshot(range);
 }

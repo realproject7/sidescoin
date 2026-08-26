@@ -66,6 +66,9 @@ export interface MarketSnapshot {
     tokenAddress: string;
     tokenName: string;
     tokenSymbol: string;
+    vaultAddress: string;
+    poolId: string;
+    quoteSymbol: string;
     isPreview: boolean;
     indexedThroughBlock: string;
     updatedAt: string;
@@ -84,5 +87,6 @@ export interface MarketSnapshot {
   links: {
     market: string;
     explorer: string;
+    dexscreener: string;
   };
 }

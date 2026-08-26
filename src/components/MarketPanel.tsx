@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { formatNumber, formatPercent, formatUsd } from "@/lib/format";
 import type { MarketRange, MarketSide, MarketSnapshot } from "@/lib/market-types";
 import type { CoinPhase } from "./coin-types";
@@ -18,19 +19,29 @@ interface MarketPanelProps {
 }
 
 export function MarketPanel({ snapshot, side, phase, loading, range, error, onRangeChange, onSelectSide, onRetry }: MarketPanelProps) {
+  const [copied, setCopied] = useState(false);
   const metrics = snapshot?.metrics;
   const isFlipping = phase !== "idle";
+  const isHolding = phase === "holding";
   const primaryValue = side === "token" ? metrics?.priceUsd ?? null : metrics?.navUsd ?? null;
   const primaryLabel = side === "token" ? "TOKEN PRICE" : "NAV / LP SHARE";
+  const copyContract = async () => {
+    if (!snapshot) return;
+    try {
+      await navigator.clipboard.writeText(snapshot.source.tokenAddress);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1_600);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   return (
     <section className="market-section" id="market" aria-labelledby="market-title">
       <div className="market-section__inner">
         <div className="market-intro">
-          <div><p className="mono-label">LIVE DUAL-SIDE MARKET</p><h2 id="market-title">Pick a side.</h2></div>
-          {snapshot && (
-            <div className="source-status"><span className="source-status__pulse" />{snapshot.source.isPreview ? `LIVE BASE PREVIEW · ${snapshot.source.tokenSymbol.toUpperCase()}` : `LIVE ON ${snapshot.source.chainName.toUpperCase()}`}</div>
-          )}
+          <div><p className="mono-label">LIVE FROM THE JANUS MARKET</p><h2 id="market-title">Choose a face.</h2></div>
+          <div className={`source-status ${snapshot ? "" : "is-loading"}`}><span className="source-status__pulse" />{snapshot ? (snapshot.source.isPreview ? `LIVE BASE PREVIEW · ${snapshot.source.tokenSymbol.toUpperCase()}` : `LIVE ON ${snapshot.source.chainName.toUpperCase()}`) : "CONNECTING TO BASECAT"}</div>
         </div>
 
         <div className="side-selector" role="tablist" aria-label="Choose market side">
@@ -61,7 +72,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
                 <div><span>POOL FEE</span><strong>{metrics ? `${metrics.feePercent.toFixed(2)}%` : "—"}</strong></div>
               </div>
               <a className={`market-cta market-cta--${side}`} href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">
-                {side === "token" ? "BUY SIDES" : "MINT lpSIDES"}<span aria-hidden="true">↗</span>
+                {side === "token" ? "TRADE THE PRICE FACE" : "MINT THE VOLUME FACE"}<span aria-hidden="true">↗</span>
               </a>
             </div>
 
@@ -69,17 +80,38 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
 
             <div className="market-footer">
               <div className="market-legend"><span><i className="legend-line legend-line--token" /> SIDES · FDV</span><span><i className="legend-line legend-line--lp" /> lpSIDES · NAV / SHARE</span></div>
-              <div className="market-links"><a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">BASESCAN ↗</a><a href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">LPTOKEN.FUN ↗</a></div>
+              <div className="market-links"><a href={snapshot?.links.dexscreener ?? "https://dexscreener.com/base"} target="_blank" rel="noreferrer">DEXSCREENER ↗</a><a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">BASESCAN ↗</a><a href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">LPTOKEN.FUN ↗</a></div>
             </div>
 
             {isFlipping && (
               <div className="market-flip-overlay" aria-live="polite">
-                <div className="flip-loader"><div className="flip-loader__coin"><span /></div><div><p className="mono-label">COIN IN FLIGHT</p><strong>Switching the live side…</strong></div></div>
+                <div className="flip-loader"><div className="flip-loader__coin"><span /></div><div><p className="mono-label">{isHolding ? "JANUS IS THINKING" : "CROSSING THE THRESHOLD"}</p><strong>{isHolding ? "Release to reveal a random face." : "Revealing the live side…"}</strong></div></div>
                 <div className="flip-progress"><span /></div>
               </div>
             )}
           </div>
         )}
+
+        <section className="market-instruments" aria-label="Market instruments and verified links">
+          <div className="market-instruments__head">
+            <div><p className="mono-label">MARKET IDENTITY</p><h3>{snapshot ? `${snapshot.source.tokenName} · ${snapshot.source.chainName}` : "Connecting to Base"}</h3></div>
+            {snapshot?.source.isPreview && <span>PREVIEW DATA · REPLACE AT SIDES LAUNCH</span>}
+          </div>
+          <dl>
+            <div className="contract-row">
+              <dt>CONTRACT</dt>
+              <dd><code title={snapshot?.source.tokenAddress}>{snapshot?.source.tokenAddress ?? "Waiting for the live contract…"}</code>{snapshot && <button type="button" onClick={copyContract}>{copied ? "COPIED" : "COPY"}</button>}</dd>
+            </div>
+            <div><dt>CHAIN</dt><dd>{snapshot?.source.chainName ?? "Base"}</dd></div>
+            <div><dt>QUOTE</dt><dd>{snapshot?.source.quoteSymbol ?? "—"}</dd></div>
+            <div><dt>VAULT</dt><dd><code title={snapshot?.source.vaultAddress}>{snapshot ? `${snapshot.source.vaultAddress.slice(0, 8)}…${snapshot.source.vaultAddress.slice(-6)}` : "—"}</code></dd></div>
+          </dl>
+          <div className="market-instruments__links">
+            <a href={snapshot?.links.dexscreener ?? "https://dexscreener.com/base"} target="_blank" rel="noreferrer">VIEW ON DEXSCREENER ↗</a>
+            <a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">VERIFY ON BASESCAN ↗</a>
+            <a href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">OPEN LPTOKEN.FUN ↗</a>
+          </div>
+        </section>
 
         <div className="market-note"><span>READ-ONLY MARKET VIEW</span><p>Market execution opens on lptoken.fun. No wallet connects to this site.</p></div>
       </div>

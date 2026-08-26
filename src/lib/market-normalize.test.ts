@@ -55,5 +55,9 @@ describe("market normalization", () => {
     expect(snapshot.metrics.priceChange24hPercent).toBe(-11.57);
     expect(snapshot.metrics.feePercent).toBe(0.9);
     expect(snapshot.source.isPreview).toBe(true);
+    expect(snapshot.source.vaultAddress).toBe("0xvault");
+    expect(snapshot.links.dexscreener).toBe(
+      "https://dexscreener.com/base/0xb2000000000000000000004c27f6523082f41d01",
+    );
   });
 });

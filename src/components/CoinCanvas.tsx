@@ -1,8 +1,7 @@
 "use client";
 
-import { ContactShadows } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { Group } from "three";
 import type { MarketSide } from "@/lib/market-types";
@@ -10,35 +9,54 @@ import type { CoinCanvasProps } from "./coin-types";
 
 const TAU = Math.PI * 2;
 
-function WaveMark({ z, reversed = false }: { z: number; reversed?: boolean }) {
-  const curves = useMemo(
-    () =>
-      [-0.43, 0, 0.43].map((offset, index) => {
-        const points = Array.from({ length: 18 }, (_, pointIndex) => {
-          const x = -1.2 + (2.4 * pointIndex) / 17;
-          const y = Math.sin(x * 2.4 + index * 0.72) * 0.18 + offset;
-          return new THREE.Vector3(x, y, 0);
-        });
-        return new THREE.CatmullRomCurve3(points);
-      }),
-    [],
-  );
+function FaceFrame({
+  accent,
+  image,
+  reversed = false,
+  z,
+}: {
+  accent: string;
+  image: string;
+  reversed?: boolean;
+  z: number;
+}) {
+  const texture = useMemo(() => {
+    const nextTexture = new THREE.TextureLoader().load(image);
+    nextTexture.colorSpace = THREE.SRGBColorSpace;
+    nextTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    nextTexture.magFilter = THREE.LinearFilter;
+    if (reversed) {
+      nextTexture.center.set(0.5, 0.5);
+      nextTexture.rotation = Math.PI;
+    }
+    return nextTexture;
+  }, [image, reversed]);
+
+  useEffect(() => () => texture.dispose(), [texture]);
 
   return (
     <group position={[0, 0, z]} rotation={reversed ? [0, Math.PI, 0] : undefined}>
-      {curves.map((curve, index) => (
-        <mesh key={index}>
-          <tubeGeometry args={[curve, 72, 0.085, 12, false]} />
-          <meshPhysicalMaterial
-            color="#7cf6d2"
-            emissive="#1bbfbb"
-            emissiveIntensity={0.32}
-            metalness={0.72}
-            roughness={0.22}
-            clearcoat={1}
-          />
-        </mesh>
-      ))}
+      <mesh>
+        <circleGeometry args={[2.23, 128]} />
+        <meshPhysicalMaterial color="#07101f" metalness={0.82} roughness={0.23} clearcoat={0.8} />
+      </mesh>
+      <mesh position={[0, 0, 0.018]}>
+        <ringGeometry args={[1.82, 2.16, 128]} />
+        <meshPhysicalMaterial color="#dce5f3" metalness={1} roughness={0.16} clearcoat={0.9} />
+      </mesh>
+      <mesh position={[0, 0, 0.032]}>
+        <ringGeometry args={[1.88, 2.08, 128]} />
+        <meshPhysicalMaterial color={accent} emissive={accent} emissiveIntensity={0.18} metalness={0.86} roughness={0.17} />
+      </mesh>
+      <mesh position={[0, 0, 0.038]}>
+        <circleGeometry args={[2.13, 128]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          alphaTest={0.025}
+          toneMapped={false}
+        />
+      </mesh>
     </group>
   );
 }
@@ -87,15 +105,26 @@ function CoinModel({ controlRef, onSettled }: CoinCanvasProps) {
         control.mode = "idle";
         onSettled(current.side);
       }
+    } else if (control.mode === "holding") {
+      if (!control.reducedMotion) {
+        group.rotation.x += delta * 13.5;
+        group.rotation.z += delta * 0.72;
+      }
+      group.position.y = 0.18;
     } else {
-      if (!control.reducedMotion) group.rotation.z += delta * 0.085;
-      group.rotation.y = -0.34 + Math.sin(state.clock.elapsedTime * 0.48) * 0.055;
+      const restingTilt = -0.04 + Math.sin(state.clock.elapsedTime * 0.31) * 0.018;
+      group.rotation.z = THREE.MathUtils.lerp(
+        group.rotation.z,
+        restingTilt,
+        Math.min(1, delta * 3),
+      );
+      group.rotation.y = -0.18 + Math.sin(state.clock.elapsedTime * 0.48) * 0.1;
       group.position.y = 0.18 + Math.sin(state.clock.elapsedTime * 0.72) * 0.07;
     }
   });
 
   return (
-    <group ref={groupRef} rotation={[0, -0.34, -0.05]} scale={0.92}>
+    <group ref={groupRef} rotation={[0, -0.18, -0.04]} scale={0.98}>
       <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
         <cylinderGeometry args={[2.55, 2.55, 0.46, 128, 1, false]} />
         <meshPhysicalMaterial
@@ -107,54 +136,8 @@ function CoinModel({ controlRef, onSettled }: CoinCanvasProps) {
         />
       </mesh>
 
-      <mesh position={[0, 0, 0.235]}>
-        <circleGeometry args={[2.22, 128]} />
-        <meshPhysicalMaterial color="#07101f" metalness={0.76} roughness={0.26} />
-      </mesh>
-      <mesh position={[0, 0, -0.235]} rotation={[0, Math.PI, 0]}>
-        <circleGeometry args={[2.22, 128]} />
-        <meshPhysicalMaterial color="#061b28" metalness={0.7} roughness={0.25} />
-      </mesh>
-
-      {[0.25, -0.25].map((z) => (
-        <mesh key={z} position={[0, 0, z]} rotation={z < 0 ? [0, Math.PI, 0] : undefined}>
-          <ringGeometry args={[1.96, 2.16, 128]} />
-          <meshPhysicalMaterial color="#d5deec" metalness={1} roughness={0.18} />
-        </mesh>
-      ))}
-
-      <group position={[0, 0, 0.272]}>
-        <mesh>
-          <ringGeometry args={[0.57, 1.48, 96, 1, 0.16, Math.PI * 0.82]} />
-          <meshPhysicalMaterial
-            color="#2867ff"
-            emissive="#003de3"
-            emissiveIntensity={0.25}
-            metalness={0.78}
-            roughness={0.18}
-            clearcoat={1}
-          />
-        </mesh>
-        <mesh>
-          <ringGeometry
-            args={[0.57, 1.48, 96, 1, Math.PI + 0.16, Math.PI * 0.82]}
-          />
-          <meshPhysicalMaterial
-            color="#0052ff"
-            emissive="#0034bd"
-            emissiveIntensity={0.22}
-            metalness={0.8}
-            roughness={0.2}
-            clearcoat={1}
-          />
-        </mesh>
-        <mesh position={[0, 0, -0.006]}>
-          <ringGeometry args={[0.43, 0.57, 96]} />
-          <meshStandardMaterial color="#b8c6da" metalness={1} roughness={0.2} />
-        </mesh>
-      </group>
-
-      <WaveMark z={-0.272} reversed />
+      <FaceFrame accent="#2f66ff" image="/janus-price-face.webp" z={0.235} />
+      <FaceFrame accent="#21d8c1" image="/janus-volume-face.webp" z={-0.235} reversed />
 
       <mesh>
         <torusGeometry args={[2.43, 0.07, 18, 128]} />
@@ -193,14 +176,10 @@ export default function CoinCanvas(props: CoinCanvasProps) {
       <pointLight position={[5, 0, 4]} intensity={42} color="#0052ff" />
       <pointLight position={[-4, -1, 2]} intensity={25} color="#7cf6d2" />
       <CoinModel {...props} />
-      <ContactShadows
-        position={[0, -3.05, -0.4]}
-        opacity={0.45}
-        scale={7}
-        blur={2.8}
-        far={5}
-        color="#0052ff"
-      />
+      <mesh position={[0, -2.7, -0.5]} scale={[2.7, 0.34, 1]}>
+        <circleGeometry args={[1, 64]} />
+        <meshBasicMaterial color="#001f88" transparent opacity={0.28} depthWrite={false} />
+      </mesh>
     </Canvas>
   );
 }

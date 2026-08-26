@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react";
 import type { MarketSide } from "@/lib/market-types";
 
-export type CoinPhase = "idle" | "landing";
+export type CoinPhase = "idle" | "holding" | "landing";
 
 export interface CoinControl {
   mode: CoinPhase;

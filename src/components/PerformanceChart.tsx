@@ -144,7 +144,16 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
             </div>
           )}
         </div>
-      ) : <div className="chart-empty">Waiting for live Base market history.</div>}
+      ) : (
+        <div className="chart-loading" role="status">
+          <div className="chart-loading__copy">
+            <span>SYNCING LIVE BASECAT TAPE</span>
+            <strong>Pulling price and volume sides…</strong>
+          </div>
+          <div className="chart-loading__grid" aria-hidden="true"><i /><i /><i /><i /></div>
+          <div className="chart-loading__scan" aria-hidden="true" />
+        </div>
+      )}
     </div>
   );
 }

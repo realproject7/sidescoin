@@ -69,6 +69,9 @@ export function normalizeMarketSnapshot(input: {
       tokenAddress: market.token.address,
       tokenName: market.token.name,
       tokenSymbol: market.token.symbol,
+      vaultAddress: market.vault.address,
+      poolId: market.pool.poolId,
+      quoteSymbol: market.pool.quote.symbol,
       isPreview: address === BASECAT_PREVIEW_ADDRESS,
       indexedThroughBlock: series.indexedThroughBlock,
       updatedAt: new Date(
@@ -99,6 +102,7 @@ export function normalizeMarketSnapshot(input: {
         market.chain.slug === "base"
           ? `https://basescan.org/token/${market.token.address}`
           : `${baseUrl}/trade/${market.chain.slug}/${market.token.address}`,
+      dexscreener: `https://dexscreener.com/${market.chain.slug}/${market.token.address}`,
     },
   };
 }
