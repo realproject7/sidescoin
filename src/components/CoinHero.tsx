@@ -8,6 +8,7 @@ import {
   useRef,
 } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { oppositeMarketSide } from "@/lib/market-side";
 import type { MarketSide } from "@/lib/market-types";
 import type { CoinControl, CoinPhase } from "./coin-types";
 
@@ -21,12 +22,13 @@ export interface CoinHeroHandle {
 }
 
 interface CoinHeroProps {
+  side: MarketSide;
   onPhaseChange: (phase: CoinPhase) => void;
   onSettled: (side: MarketSide) => void;
 }
 
 export const CoinHero = forwardRef<CoinHeroHandle, CoinHeroProps>(
-  function CoinHero({ onPhaseChange, onSettled }, ref) {
+  function CoinHero({ side, onPhaseChange, onSettled }, ref) {
     const reducedMotion = useReducedMotion();
     const controlRef = useRef<CoinControl>({
       mode: "idle",
@@ -40,40 +42,30 @@ export const CoinHero = forwardRef<CoinHeroHandle, CoinHeroProps>(
     controlRef.current.reducedMotion = reducedMotion;
 
     const beginLanding = useCallback(
-      (side: MarketSide, direct = false) => {
+      (nextSide: MarketSide) => {
         const control = controlRef.current;
         if (control.mode === "landing") return;
 
         control.mode = "landing";
-        control.targetSide = side;
-        control.turns = reducedMotion ? 0 : direct ? 3 : 4 + Math.floor(Math.random() * 2);
-        control.duration = reducedMotion ? 0.36 : direct ? 1.25 : 1.65;
+        control.targetSide = nextSide;
+        control.turns = reducedMotion ? 0 : 3;
+        control.duration = reducedMotion ? 0.28 : 1.05;
         control.commandId += 1;
         onPhaseChange("landing");
       },
       [onPhaseChange, reducedMotion],
     );
 
-    const startHolding = useCallback(() => {
-      const control = controlRef.current;
-      if (control.mode !== "idle") return;
-      control.mode = "holding";
-      onPhaseChange("holding");
-    }, [onPhaseChange]);
-
-    const release = useCallback(() => {
-      if (controlRef.current.mode !== "holding") return;
-      beginLanding(Math.random() < 0.5 ? "token" : "lp");
-    }, [beginLanding]);
-
     useImperativeHandle(
       ref,
       () => ({
-        flipTo(side) {
-          if (controlRef.current.mode === "idle") beginLanding(side, true);
+        flipTo(nextSide) {
+          if (controlRef.current.mode === "idle" && nextSide !== side) {
+            beginLanding(nextSide);
+          }
         },
       }),
-      [beginLanding],
+      [beginLanding, side],
     );
 
     const handleSettled = useCallback(
@@ -88,31 +80,8 @@ export const CoinHero = forwardRef<CoinHeroHandle, CoinHeroProps>(
       <button
         type="button"
         className="coin-interaction"
-        aria-label="Hold to spin the SIDES coin, then release to choose a side"
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          startHolding();
-        }}
-        onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-          }
-          release();
-        }}
-        onPointerCancel={release}
-        onKeyDown={(event) => {
-          if ((event.key === " " || event.key === "Enter") && !event.repeat) {
-            event.preventDefault();
-            startHolding();
-          }
-        }}
-        onKeyUp={(event) => {
-          if (event.key === " " || event.key === "Enter") {
-            event.preventDefault();
-            release();
-          }
-        }}
+        aria-label={`Flip the SIDES coin to the ${side === "token" ? "lpSIDES volume" : "SIDES price"} side`}
+        onClick={() => beginLanding(oppositeMarketSide(side))}
       >
         <CoinCanvas controlRef={controlRef} onSettled={handleSettled} />
         <span className="coin-interaction__orbit" aria-hidden="true" />

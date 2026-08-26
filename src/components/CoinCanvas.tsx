@@ -46,7 +46,6 @@ function WaveMark({ z, reversed = false }: { z: number; reversed?: boolean }) {
 function CoinModel({ controlRef, onSettled }: CoinCanvasProps) {
   const groupRef = useRef<Group>(null);
   const seenCommand = useRef(0);
-  const angularVelocity = useRef(0);
   const landing = useRef({
     start: 0,
     from: 0,
@@ -75,16 +74,7 @@ function CoinModel({ controlRef, onSettled }: CoinCanvasProps) {
       };
     }
 
-    if (control.mode === "holding") {
-      const targetVelocity = control.reducedMotion ? 2.4 : 20;
-      angularVelocity.current = THREE.MathUtils.lerp(
-        angularVelocity.current,
-        targetVelocity,
-        Math.min(1, delta * 3.4),
-      );
-      group.rotation.x += angularVelocity.current * delta;
-      group.rotation.z += delta * 0.38;
-    } else if (control.mode === "landing") {
+    if (control.mode === "landing") {
       const current = landing.current;
       const rawProgress = (state.clock.elapsedTime - current.start) / current.duration;
       const progress = THREE.MathUtils.clamp(rawProgress, 0, 1);
@@ -94,12 +84,10 @@ function CoinModel({ controlRef, onSettled }: CoinCanvasProps) {
 
       if (progress >= 1) {
         group.rotation.x = current.to;
-        angularVelocity.current = 0;
         control.mode = "idle";
         onSettled(current.side);
       }
     } else {
-      angularVelocity.current = 0;
       if (!control.reducedMotion) group.rotation.z += delta * 0.085;
       group.rotation.y = -0.34 + Math.sin(state.clock.elapsedTime * 0.48) * 0.055;
       group.position.y = 0.18 + Math.sin(state.clock.elapsedTime * 0.72) * 0.07;

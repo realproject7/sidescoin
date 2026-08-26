@@ -27,7 +27,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
     <section className="market-section" id="market" aria-labelledby="market-title">
       <div className="market-section__inner">
         <div className="market-intro">
-          <div><p className="mono-label">CHOOSE YOUR EXPOSURE</p><h2 id="market-title">One market. Two ways in.</h2></div>
+          <div><p className="mono-label">LIVE DUAL-SIDE MARKET</p><h2 id="market-title">Pick a side.</h2></div>
           {snapshot && (
             <div className="source-status"><span className="source-status__pulse" />{snapshot.source.isPreview ? `LIVE BASE PREVIEW · ${snapshot.source.tokenSymbol.toUpperCase()}` : `LIVE ON ${snapshot.source.chainName.toUpperCase()}`}</div>
           )}
@@ -74,7 +74,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
 
             {isFlipping && (
               <div className="market-flip-overlay" aria-live="polite">
-                <div className="flip-loader"><div className="flip-loader__coin"><span /></div><div><p className="mono-label">{phase === "holding" ? "BUILDING MOMENTUM" : "COIN IN FLIGHT"}</p><strong>{phase === "holding" ? "Release to choose a side." : "Finding the face…"}</strong></div></div>
+                <div className="flip-loader"><div className="flip-loader__coin"><span /></div><div><p className="mono-label">COIN IN FLIGHT</p><strong>Switching the live side…</strong></div></div>
                 <div className="flip-progress"><span /></div>
               </div>
             )}

@@ -8,9 +8,8 @@ import type { CoinPhase } from "./coin-types";
 import { MarketPanel } from "./MarketPanel";
 
 const phaseCopy: Record<CoinPhase, { eyebrow: string; instruction: string }> = {
-  idle: { eyebrow: "PRESS + HOLD", instruction: "Release to let the coin choose." },
-  holding: { eyebrow: "MOMENTUM BUILDING", instruction: "Keep holding. Release when it feels right." },
-  landing: { eyebrow: "COIN IN FLIGHT", instruction: "The next side is locking in." },
+  idle: { eyebrow: "CLICK · TAP · FLIP", instruction: "Switch the market side." },
+  landing: { eyebrow: "COIN IN FLIGHT", instruction: "Switching the live view…" },
 };
 
 export function SidesExperience() {
@@ -41,7 +40,9 @@ export function SidesExperience() {
     return () => controller.abort();
   }, [range, retryKey]);
 
-  const chooseSide = useCallback((nextSide: MarketSide) => { coinRef.current?.flipTo(nextSide); }, []);
+  const chooseSide = useCallback((nextSide: MarketSide) => {
+    if (nextSide !== side) coinRef.current?.flipTo(nextSide);
+  }, [side]);
   const changeRange = useCallback((nextRange: MarketRange) => {
     if (nextRange === range) return;
     setLoading(true);
@@ -66,35 +67,34 @@ export function SidesExperience() {
 
         <section className="hero" id="top">
           <div className="hero-copy">
-            <p className="hero-kicker"><span /> A TWO-SIDED MARKET ON BASE</p>
-            <h1>EVERY COIN<span>HAS TWO SIDES.</span></h1>
-            <p className="hero-statement">THIS ONE TOKENIZES THE OTHER.</p>
-            <p className="hero-body">SIDES follows the token. lpSIDES tracks a share of the liquidity vault behind it. Hold the coin, then let the market pick a side.</p>
-            <div className="hero-instruction" aria-live="polite"><div className={`instruction-icon instruction-icon--${phase}`} aria-hidden="true"><span /></div><div><strong>{currentCopy.eyebrow}</strong><p>{currentCopy.instruction}</p></div></div>
+            <p className="hero-kicker"><span /> SIDES ON BASE</p>
+            <h1><span>TRADE</span><span className="hero-title__accent">DUAL-SIDE COINS</span></h1>
           </div>
 
           <div className={`hero-coin hero-coin--${phase}`}>
             <div className="face-status"><span className={side === "token" ? "is-token" : "is-lp"} />{side === "token" ? "TOKEN SIDE" : "LIQUIDITY SIDE"}</div>
-            <CoinHero ref={coinRef} onPhaseChange={setPhase} onSettled={setSide} />
-            <div className="coin-scale" aria-hidden="true"><span>SIDES</span><i /><span>lpSIDES</span></div>
+            <CoinHero ref={coinRef} side={side} onPhaseChange={setPhase} onSettled={setSide} />
+            <div className="hero-coin__instruction" aria-live="polite"><strong>{currentCopy.eyebrow}</strong><span>{currentCopy.instruction}</span></div>
           </div>
 
-          <a className="scroll-cue" href="#market"><span>SEE BOTH SIDES</span><i aria-hidden="true">↓</i></a>
+          <div className={`hero-choice hero-choice--${side}`} aria-live="polite">
+            <span className="hero-choice__price">PRICE</span><i>VS</i><span className="hero-choice__volume">VOLUME</span>
+          </div>
         </section>
       </div>
 
       <MarketPanel snapshot={snapshot} side={side} phase={phase} loading={loading} range={range} error={error} onRangeChange={changeRange} onSelectSide={chooseSide} onRetry={retry} />
 
       <section className="mechanism" aria-labelledby="mechanism-title">
-        <div className="mechanism__lead"><p className="mono-label">ONE POOL · TWO POSITIONS</p><h2 id="mechanism-title">The other side<br />is the liquidity.</h2></div>
+        <div className="mechanism__lead"><p className="mono-label">THE DUAL-SIDE MARKET</p><h2 id="mechanism-title">One coin.<br />Two sides.</h2></div>
         <div className="mechanism__steps">
-          <article><span>01</span><h3>Trade SIDES</h3><p>Take direct price exposure through the token market.</p></article>
-          <article><span>02</span><h3>Mint lpSIDES</h3><p>Enter the automatic liquidity vault and receive its LP share.</p></article>
-          <article><span>03</span><h3>Choose anytime</h3><p>Buy or sell the token. Mint or redeem the LP share on lptoken.fun.</p></article>
+          <article><span>01 · PRICE</span><h3>Trade SIDES</h3><p>Take the direct meme-coin position and follow the token price.</p></article>
+          <article><span>02 · VOLUME</span><h3>Mint lpSIDES</h3><p>Take the liquidity-side position and follow the market activity behind the coin.</p></article>
+          <article><span>03 · FLIP</span><h3>Switch the view</h3><p>Tap the coin to move between both sides. Execution stays on lptoken.fun.</p></article>
         </div>
       </section>
 
-      <footer className="site-footer"><div className="wordmark wordmark--footer"><BrandMark compact /><span>SIDES</span></div><p>THE TOKEN AND THE LIQUIDITY BEHIND IT.</p><a href={marketUrl} target="_blank" rel="noreferrer">TRADE ON LPTOKEN.FUN ↗</a></footer>
+      <footer className="site-footer"><div className="wordmark wordmark--footer"><BrandMark compact /><span>SIDES</span></div><p>TRADE PRICE. OR VOLUME.</p><a href={marketUrl} target="_blank" rel="noreferrer">TRADE ON LPTOKEN.FUN ↗</a></footer>
     </main>
   );
 }
