@@ -5,10 +5,8 @@ import type {
   RawMarketResponse,
   RawSeriesResponse,
 } from "./market-types";
-import {
-  BASECAT_PREVIEW_ADDRESS,
-  normalizeMarketSnapshot,
-} from "./market-normalize";
+import { normalizeMarketSnapshot } from "./market-normalize";
+import { SIDES_CONTRACT } from "./sides";
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const STABLE_QUOTES = new Set(["USDC", "USDT", "USDS", "USDG", "DAI"]);
@@ -17,7 +15,7 @@ function getConfig() {
   const baseUrl = process.env.LPTOKEN_BASE_URL ?? "https://lptoken.fun";
   const chain = process.env.LPTOKEN_CHAIN ?? "base";
   const tokenAddress =
-    process.env.LPTOKEN_TOKEN_ADDRESS ?? BASECAT_PREVIEW_ADDRESS;
+    process.env.LPTOKEN_TOKEN_ADDRESS ?? SIDES_CONTRACT;
   const rpcUrl = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
 
   if (!ADDRESS_PATTERN.test(tokenAddress)) {
@@ -176,7 +174,7 @@ async function loadMarketSnapshot(
 
 const getCachedMarketSnapshot = unstable_cache(
   loadMarketSnapshot,
-  ["sides-market-snapshot-v2"],
+  ["sides-market-snapshot-v3"],
   { revalidate: 45 },
 );
 

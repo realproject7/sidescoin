@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatNumber, formatPercent, formatUsd } from "@/lib/format";
 import type { MarketRange, MarketSide, MarketSnapshot } from "@/lib/market-types";
+import { SIDES_MARKET_URL } from "@/lib/sides";
 import type { CoinPhase } from "./coin-types";
 import { PerformanceChart } from "./PerformanceChart";
 
@@ -41,7 +42,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
       <div className="market-section__inner">
         <div className="market-intro">
           <div><p className="mono-label">LIVE FROM THE JANUS MARKET</p><h2 id="market-title">Choose a face.</h2></div>
-          <div className={`source-status ${snapshot ? "" : "is-loading"}`}><span className="source-status__pulse" />{snapshot ? (snapshot.source.isPreview ? `LIVE BASE PREVIEW · ${snapshot.source.tokenSymbol.toUpperCase()}` : `LIVE ON ${snapshot.source.chainName.toUpperCase()}`) : "CONNECTING TO BASECAT"}</div>
+          <div className={`source-status ${snapshot ? "" : "is-loading"}`}><span className="source-status__pulse" />{snapshot ? (snapshot.source.isPreview ? `LIVE BASE PREVIEW · ${snapshot.source.tokenSymbol.toUpperCase()}` : `LIVE ON ${snapshot.source.chainName.toUpperCase()}`) : "CONNECTING TO SIDES"}</div>
         </div>
 
         <div className="side-selector" role="tablist" aria-label="Choose market side">
@@ -71,7 +72,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
                 <div><span>TRADES</span><strong>{metrics ? formatNumber(metrics.trades24h, true) : "—"}</strong></div>
                 <div><span>POOL FEE</span><strong>{metrics ? `${metrics.feePercent.toFixed(2)}%` : "—"}</strong></div>
               </div>
-              <a className={`market-cta market-cta--${side}`} href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">
+              <a className={`market-cta market-cta--${side}`} href={snapshot?.links.market ?? SIDES_MARKET_URL} target="_blank" rel="noreferrer">
                 {side === "token" ? "TRADE THE PRICE FACE" : "MINT THE VOLUME FACE"}<span aria-hidden="true">↗</span>
               </a>
             </div>
@@ -80,7 +81,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
 
             <div className="market-footer">
               <div className="market-legend"><span><i className="legend-line legend-line--token" /> SIDES · FDV</span><span><i className="legend-line legend-line--lp" /> lpSIDES · NAV / SHARE</span></div>
-              <div className="market-links"><a href={snapshot?.links.dexscreener ?? "https://dexscreener.com/base"} target="_blank" rel="noreferrer">DEXSCREENER ↗</a><a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">BASESCAN ↗</a><a href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">LPTOKEN.FUN ↗</a></div>
+              <div className="market-links"><a href={snapshot?.links.dexscreener ?? "https://dexscreener.com/base"} target="_blank" rel="noreferrer">DEXSCREENER ↗</a><a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">BASESCAN ↗</a><a href={snapshot?.links.market ?? SIDES_MARKET_URL} target="_blank" rel="noreferrer">LPTOKEN.FUN ↗</a></div>
             </div>
 
             {isFlipping && (
@@ -109,7 +110,7 @@ export function MarketPanel({ snapshot, side, phase, loading, range, error, onRa
           <div className="market-instruments__links">
             <a href={snapshot?.links.dexscreener ?? "https://dexscreener.com/base"} target="_blank" rel="noreferrer">VIEW ON DEXSCREENER ↗</a>
             <a href={snapshot?.links.explorer ?? "https://basescan.org"} target="_blank" rel="noreferrer">VERIFY ON BASESCAN ↗</a>
-            <a href={snapshot?.links.market ?? "https://lptoken.fun"} target="_blank" rel="noreferrer">OPEN LPTOKEN.FUN ↗</a>
+            <a href={snapshot?.links.market ?? SIDES_MARKET_URL} target="_blank" rel="noreferrer">OPEN LPTOKEN.FUN ↗</a>
           </div>
         </section>
 

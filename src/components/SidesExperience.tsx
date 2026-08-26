@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MarketRange, MarketSide, MarketSnapshot } from "@/lib/market-types";
+import { SIDES_LAUNCH_TRANSACTION_URL, SIDES_MARKET_URL } from "@/lib/sides";
 import { BrandMark } from "./BrandMark";
 import { CoinHero, type CoinHeroHandle } from "./CoinHero";
 import type { CoinPhase } from "./coin-types";
@@ -55,7 +56,7 @@ export function SidesExperience() {
     setError(null);
     setRetryKey((value) => value + 1);
   }, []);
-  const marketUrl = snapshot?.links.market ?? "https://lptoken.fun";
+  const marketUrl = snapshot?.links.market ?? SIDES_MARKET_URL;
   const currentCopy = phaseCopy[phase];
 
   return (
@@ -87,11 +88,27 @@ export function SidesExperience() {
         </section>
 
         <div className="meme-ticker" aria-hidden="true">
-          <div><span>PRICE LOOKS FORWARD</span> · HOLD IT · <span>VOLUME LOOKS BACK</span> · FLIP IT · JANUS NEVER TRADES ONE-SIDED · <span>PRICE LOOKS FORWARD</span> · HOLD IT · <span>VOLUME LOOKS BACK</span> · FLIP IT · JANUS NEVER TRADES ONE-SIDED ·</div>
+          <div><span>CREATOR BOUGHT ZERO</span> · PRICE LOOKS FORWARD · <span>VOLUME LOOKS BACK</span> · FLIP IT · JANUS NEVER TRADES ONE-SIDED · <span>CREATOR BOUGHT ZERO</span> · PRICE LOOKS FORWARD · <span>VOLUME LOOKS BACK</span> · FLIP IT · JANUS NEVER TRADES ONE-SIDED ·</div>
         </div>
       </div>
 
       <MarketPanel snapshot={snapshot} side={side} phase={phase} loading={loading} range={range} error={error} onRangeChange={changeRange} onSelectSide={chooseSide} onRetry={retry} />
+
+      <section className="launch-proof" aria-labelledby="launch-proof-title">
+        <div className="launch-proof__story">
+          <p className="mono-label">LIVE EXPERIMENT · VERIFIED ON BASE</p>
+          <h2 id="launch-proof-title">I made the coin that explains lpTOKEN.fun. Then I bought neither side.</h2>
+          <p>Sides Coin launched as a live two-sided market experiment: SIDES for price exposure and lpSIDES for liquidity exposure. The creator initial buy was exactly 0 ETH.</p>
+          <a href={SIDES_LAUNCH_TRANSACTION_URL} target="_blank" rel="noreferrer">VERIFY THE LAUNCH ↗</a>
+        </div>
+        <dl className="launch-proof__facts">
+          <div><dt>0 ETH</dt><dd>Creator initial buy</dd></div>
+          <div><dt>0 SIDES</dt><dd>Held by the creator at launch</dd></div>
+          <div><dt>1B</dt><dd>Fixed token supply</dd></div>
+          <div><dt>PERMANENT</dt><dd>One-sided launch liquidity</dd></div>
+        </dl>
+        <p className="launch-proof__note">The zero-buy claim refers to the atomic creator buy at launch. Protocol-defined creator fee rights still apply.</p>
+      </section>
 
       <section className="mechanism" aria-labelledby="mechanism-title">
         <div className="mechanism__lead">

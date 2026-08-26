@@ -147,7 +147,7 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
       ) : (
         <div className="chart-loading" role="status">
           <div className="chart-loading__copy">
-            <span>SYNCING LIVE BASECAT TAPE</span>
+            <span>SYNCING LIVE SIDES TAPE</span>
             <strong>Pulling price and volume sides…</strong>
           </div>
           <div className="chart-loading__grid" aria-hidden="true"><i /><i /><i /><i /></div>

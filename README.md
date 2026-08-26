@@ -20,10 +20,10 @@ Open `http://localhost:3000`.
 | --- | --- | --- |
 | `LPTOKEN_BASE_URL` | `https://lptoken.fun` | Public market-data origin |
 | `LPTOKEN_CHAIN` | `base` | Market chain slug |
-| `LPTOKEN_TOKEN_ADDRESS` | Basecat address | Preview market, replaced after SIDES launches |
+| `LPTOKEN_TOKEN_ADDRESS` | SIDES address | Live Sides Coin market on Base |
 | `BASE_RPC_URL` | `https://mainnet.base.org` | Read-only ERC-20 total-supply query |
 
-The Basecat address automatically enables a visible preview-data label. Replacing it with the SIDES token address removes that label without a code change.
+The production default is the live SIDES token at `0x5bdae19bc3144ec730e5d3a07023d289313beb15`. The former Basecat address still enables a visible preview-data label when explicitly configured for local comparison work.
 
 ## Checks
 
