@@ -1,6 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  comparisonReturnDomain,
+  createDollarAxis,
+  dollarValueAt,
+  plotRatioFor,
+  type DollarAxis,
+} from "@/lib/chart-scale";
 import { formatChartTime, formatUsd } from "@/lib/format";
 import type { MarketChartPoint, MarketRange, MarketSide } from "@/lib/market-types";
 
@@ -16,20 +23,12 @@ interface PerformanceChartProps {
   onRangeChange: (range: MarketRange) => void;
 }
 
-function makeDomain(values: number[]) {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = max - min || Math.max(Math.abs(max) * 0.08, 1);
-  return [Math.max(0, min - spread * 0.12), max + spread * 0.12] as const;
-}
-
-function pathFor(points: MarketChartPoint[], key: "fdvUsd" | "navUsd", domain: readonly [number, number]) {
+function pathFor(points: MarketChartPoint[], key: "fdvUsd" | "navUsd", axis: DollarAxis) {
   const chartWidth = WIDTH - PADDING.left - PADDING.right;
   const chartHeight = HEIGHT - PADDING.top - PADDING.bottom;
-  const span = domain[1] - domain[0] || 1;
   return points.map((point, index) => {
     const x = PADDING.left + (index / Math.max(points.length - 1, 1)) * chartWidth;
-    const y = PADDING.top + (1 - (point[key] - domain[0]) / span) * chartHeight;
+    const y = PADDING.top + plotRatioFor(point[key], axis) * chartHeight;
     return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
   }).join(" ");
 }
@@ -38,13 +37,21 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const chart = useMemo(() => {
     if (points.length === 0) return null;
-    const fdvDomain = makeDomain(points.map((point) => point.fdvUsd));
-    const navDomain = makeDomain(points.map((point) => point.navUsd));
+    const fdvValues = points.map((point) => point.fdvUsd);
+    const navValues = points.map((point) => point.navUsd);
+    const domain = comparisonReturnDomain([fdvValues, navValues]);
+    if (!domain) return null;
+
+    const fdvAxis = createDollarAxis(fdvValues, domain);
+    const navAxis = createDollarAxis(navValues, domain);
+    if (!fdvAxis || !navAxis) return null;
+
     return {
-      fdvDomain,
-      navDomain,
-      fdvPath: pathFor(points, "fdvUsd", fdvDomain),
-      navPath: pathFor(points, "navUsd", navDomain),
+      domain,
+      fdvAxis,
+      navAxis,
+      fdvPath: pathFor(points, "fdvUsd", fdvAxis),
+      navPath: pathFor(points, "navUsd", navAxis),
     };
   }, [points]);
 
@@ -91,8 +98,8 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
 
             {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
               const y = PADDING.top + ratio * (HEIGHT - PADDING.top - PADDING.bottom);
-              const fdvValue = chart.fdvDomain[1] - ratio * (chart.fdvDomain[1] - chart.fdvDomain[0]);
-              const navValue = chart.navDomain[1] - ratio * (chart.navDomain[1] - chart.navDomain[0]);
+              const fdvValue = dollarValueAt(ratio, chart.fdvAxis);
+              const navValue = dollarValueAt(ratio, chart.navAxis);
               return (
                 <g key={ratio}>
                   <line x1={PADDING.left} x2={WIDTH - PADDING.right} y1={y} y2={y} className="chart-grid" />
@@ -102,6 +109,14 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
               );
             })}
 
+            <line
+              x1={PADDING.left}
+              x2={WIDTH - PADDING.right}
+              y1={PADDING.top + plotRatioFor(chart.fdvAxis.baseline, chart.fdvAxis) * (HEIGHT - PADDING.top - PADDING.bottom)}
+              y2={PADDING.top + plotRatioFor(chart.fdvAxis.baseline, chart.fdvAxis) * (HEIGHT - PADDING.top - PADDING.bottom)}
+              className="chart-baseline"
+            />
+
             <text x={PADDING.left} y={17} className="chart-caption chart-caption--token">FDV</text>
             <text x={WIDTH - PADDING.right} y={17} textAnchor="end" className="chart-caption chart-caption--lp">NAV / SHARE</text>
             <path d={chart.fdvPath} className={`chart-line chart-line--token ${side === "token" ? "is-selected" : ""}`} filter={side === "token" ? "url(#line-glow)" : undefined} />
@@ -110,8 +125,8 @@ export function PerformanceChart({ points, range, side, loading, onRangeChange }
             {hovered && (
               <g>
                 <line x1={hoverX} x2={hoverX} y1={PADDING.top} y2={HEIGHT - PADDING.bottom} className="chart-cursor" />
-                <circle cx={hoverX} cy={PADDING.top + (1 - (hovered.fdvUsd - chart.fdvDomain[0]) / (chart.fdvDomain[1] - chart.fdvDomain[0])) * (HEIGHT - PADDING.top - PADDING.bottom)} r="5" className="chart-dot chart-dot--token" />
-                <circle cx={hoverX} cy={PADDING.top + (1 - (hovered.navUsd - chart.navDomain[0]) / (chart.navDomain[1] - chart.navDomain[0])) * (HEIGHT - PADDING.top - PADDING.bottom)} r="5" className="chart-dot chart-dot--lp" />
+                <circle cx={hoverX} cy={PADDING.top + plotRatioFor(hovered.fdvUsd, chart.fdvAxis) * (HEIGHT - PADDING.top - PADDING.bottom)} r="5" className="chart-dot chart-dot--token" />
+                <circle cx={hoverX} cy={PADDING.top + plotRatioFor(hovered.navUsd, chart.navAxis) * (HEIGHT - PADDING.top - PADDING.bottom)} r="5" className="chart-dot chart-dot--lp" />
               </g>
             )}
 

@@ -808,6 +808,12 @@ a {
   stroke-width: 1;
 }
 
+.chart-baseline {
+  stroke: rgba(16, 38, 75, 0.28);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
 .chart-axis,
 .chart-caption,
 .chart-time {
