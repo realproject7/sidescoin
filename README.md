@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIDES
 
-## Getting Started
+An interactive, read-only Base market experience for `SIDES` and its automatic LP share, `lpSIDES`.
 
-First, run the development server:
+The hero is a real-time 3D coin: hold to build momentum, release to land on a side, or choose a side from the market panel. Live market and series data are loaded from public lptoken.fun endpoints through a server-side route. Execution remains on lptoken.fun.
+
+## Local development
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `LPTOKEN_BASE_URL` | `https://lptoken.fun` | Public market-data origin |
+| `LPTOKEN_CHAIN` | `base` | Market chain slug |
+| `LPTOKEN_TOKEN_ADDRESS` | Basecat address | Preview market, replaced after SIDES launches |
+| `BASE_RPC_URL` | `https://mainnet.base.org` | Read-only ERC-20 total-supply query |
 
-## Learn More
+The Basecat address automatically enables a visible preview-data label. Replacing it with the SIDES token address removes that label without a code change.
 
-To learn more about Next.js, take a look at the following resources:
+## Checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No wallet connection, private API key, or credential is required.
